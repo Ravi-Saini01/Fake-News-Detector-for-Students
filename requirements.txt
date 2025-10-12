@@ -1,0 +1,10 @@
+streamlit
+scikit-learn
+pandas
+numpy
+nltk
+transformers
+torch
+newspaper3k
+requests
+beautifulsoup4
