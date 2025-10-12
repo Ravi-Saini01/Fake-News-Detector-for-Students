@@ -6,7 +6,7 @@
 
 ## 🔗 Live Demo
 
-You can deploy this app on Streamlit Cloud. A sample URL format:
+https://fake-news-detector-for-students1.streamlit.app/
 
 
 ---
