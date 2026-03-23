@@ -1,11 +1,7 @@
-streamlit
+streamlit==1.33.0
+transformers==4.41.2
+torch==2.2.2
+sentencepiece
 scikit-learn
 pandas
 numpy
-nltk
-transformers
-torch
-newspaper3k
-requests
-beautifulsoup4
-lxml[html_clean]
