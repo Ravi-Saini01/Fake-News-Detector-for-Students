@@ -2,13 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import re
-import nltk
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.metrics import accuracy_score
-from transformers import pipeline
-from newspaper import Article
 import requests
 from bs4 import BeautifulSoup
 import pickle
@@ -17,10 +14,10 @@ import os
 # ---------------------
 # Streamlit Setup
 # ---------------------
-st.set_page_config(page_title="Fake News Detector for Students 🧠", page_icon="📰", layout="wide")
+st.set_page_config(page_title="Fake News Detector 🧠", page_icon="📰", layout="wide")
 
 st.title("🧠 Fake News Detector for Students")
-st.markdown("### Detect misinformation and get concise summaries from AI!")
+st.markdown("### Detect misinformation and get quick summaries!")
 
 # ---------------------
 # Load / Train Model
@@ -66,23 +63,6 @@ model, vectorizer, acc = load_fake_news_model()
 st.success(f"✅ Model ready! Accuracy: **{acc*100:.2f}%**")
 
 # ---------------------
-# Summarizer (FIXED)
-# ---------------------
-@st.cache_resource
-def load_summarizer():
-    try:
-        return pipeline(
-            "summarization",
-            model="sshleifer/distilbart-cnn-12-6"  # lightweight + stable
-        )
-    except Exception as e:
-        st.error(f"Error loading summarizer: {e}")
-        return None
-
-
-summarizer = load_summarizer()
-
-# ---------------------
 # Helper Functions
 # ---------------------
 def clean_text(text):
@@ -99,22 +79,19 @@ def predict_fake_news(text):
 
 def fetch_article_from_url(url):
     try:
-        article = Article(url)
-        article.download()
-        article.parse()
-        text = article.text
-        if not text.strip():
-            raise ValueError("Empty article")
-        return text
+        page = requests.get(url, timeout=10)
+        soup = BeautifulSoup(page.content, "html.parser")
+        paragraphs = soup.find_all("p")
+        text = " ".join(p.get_text() for p in paragraphs)
+        return text if len(text) > 100 else None
     except:
-        try:
-            page = requests.get(url, timeout=10)
-            soup = BeautifulSoup(page.content, "html.parser")
-            paragraphs = soup.find_all("p")
-            text = " ".join(p.get_text() for p in paragraphs)
-            return text if len(text) > 100 else None
-        except:
-            return None
+        return None
+
+
+# ✅ Simple summarizer (NEW)
+def simple_summary(text, max_sentences=3):
+    sentences = text.split(". ")
+    return ". ".join(sentences[:max_sentences])
 
 
 # ---------------------
@@ -150,18 +127,7 @@ if st.button("🔍 Analyze"):
     else:
         with st.spinner("Analyzing..."):
             label = predict_fake_news(article_text)
-
-            summary = "Summarizer not available."
-            if summarizer:
-                try:
-                    summary = summarizer(
-                        article_text[:1000],  # prevent overflow
-                        max_length=100,
-                        min_length=25,
-                        do_sample=False
-                    )[0]["summary_text"]
-                except Exception as e:
-                    summary = f"Error generating summary: {e}"
+            summary = simple_summary(article_text)
 
         if label == "FAKE":
             st.error("🚨 This news appears **FAKE**.")
@@ -182,6 +148,6 @@ Fake News Detector helps students verify online information using AI.
 **Features:**
 - Detect fake vs real news  
 - Input via text or URL  
-- Auto summarization  
+- Quick summarization  
 - ML trained on real datasets  
 """)
