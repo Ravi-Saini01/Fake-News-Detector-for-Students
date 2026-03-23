@@ -5,3 +5,6 @@ sentencepiece
 scikit-learn
 pandas
 numpy
+newspaper3k
+beautifulsoup4
+requests
